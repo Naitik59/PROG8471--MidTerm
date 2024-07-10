@@ -15,7 +15,7 @@ class CoreDataMethods {
     
     let appDelegate = UIApplication.shared.delegate as? AppDelegate
     
-    func addUpdateCurrentTime(task: Task) {
+    func addUpdateCurrentTime(task: Task, completion: @escaping(Bool) -> Void) {
         if let managedContext = appDelegate?.persistentContainer.viewContext {
             
             let fetchRequest:NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "TaskItem")
@@ -42,9 +42,13 @@ class CoreDataMethods {
                 
                 try managedContext.save()
                 
+                completion(true)
             } catch let error as NSError {
                 print("🆘 Could not save. \(error), \(error.userInfo)")
+                completion(false)
             }
+        } else {
+            completion(false)
         }
     }
     
@@ -80,6 +84,24 @@ class CoreDataMethods {
             }
         }
         return []
+    }
+    
+    func deleteTask(task: Task) {
+        if let managedContext = appDelegate?.persistentContainer.viewContext {
+            let fetchRequest:NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "TaskItem")
+            fetchRequest.predicate = NSPredicate(format: "title = %@", task.title)
+            
+            do {
+                let result = try managedContext.fetch(fetchRequest)
+                if let result = result as? [NSManagedObject], let entity = result.first {
+                    managedContext.delete(entity)
+                }
+                
+                try managedContext.save()
+            } catch let error as NSError {
+                print("🆘 Could not save. \(error), \(error.userInfo)")
+            }
+        }
     }
     
     private func checkCategory(for categoryStr: String) -> TaskCategory {

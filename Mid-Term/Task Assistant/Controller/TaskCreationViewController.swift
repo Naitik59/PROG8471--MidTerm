@@ -64,7 +64,7 @@ class TaskCreationViewController: UIViewController {
     
     private func addTask() {
         if titleTextField.text == "" || descriptionTextField.text == "" {
-            presentAlert(errorMessage: "Please enter all the required fields!")
+            presentAlert(title: "Error", message: "Please enter all the required fields!", btnTitle: "Cancel")
         } else {
             let title = titleTextField.text ?? ""
             let description = descriptionTextField.text ?? ""
@@ -72,8 +72,20 @@ class TaskCreationViewController: UIViewController {
             let priority = priority(for: prioritySegment.selectedSegmentIndex)
             
             let task = Task(title: title, description: description, image: categoryImage, dueDate: dueDate, priority: priority, status: .pending, category: selectedCategory)
-            CoreDataMethods.shared.addUpdateCurrentTime(task: task)
+            CoreDataMethods.shared.addUpdateCurrentTime(task: task) { success in
+                if success {
+                    self.presentAlert(title: "Success", message: "Task added to the list successfully.", btnTitle: "Cancel")
+                    self.clearFields()
+                } else {
+                    self.presentAlert(title: "Failed", message: "Failed to add task into the list.", btnTitle: "Cancel")
+                }
+            }
         }
+    }
+    
+    private func clearFields() {
+        self.titleTextField.text = ""
+        self.descriptionTextField.text = ""
     }
     
     private func priority(for index: Int) -> Priority {
@@ -89,9 +101,9 @@ class TaskCreationViewController: UIViewController {
         }
     }
     
-    private func presentAlert(errorMessage: String) {
-        let alertController = UIAlertController(title: "Error", message: errorMessage, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: "Cancel", style: .default))
+    private func presentAlert(title: String, message: String, btnTitle: String) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: btnTitle, style: .default))
         self.present(alertController, animated: true)
     }
     

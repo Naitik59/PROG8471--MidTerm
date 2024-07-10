@@ -10,6 +10,7 @@ import UIKit
 class ListViewController: UIViewController {
 
     @IBOutlet weak var taskListTableView: UITableView!
+    @IBOutlet weak var emptyListLbl: UILabel!
     
     var tasks: [Task] = []
     
@@ -64,9 +65,15 @@ class ListViewController: UIViewController {
         
         tasks.append(contentsOf: taskItems)
         
+        changeEmptyListMsgVisibility()
+        
         DispatchQueue.main.async {
             self.taskListTableView.reloadData()
         }
+    }
+    
+    private func changeEmptyListMsgVisibility() {
+        emptyListLbl.isHidden = !tasks.isEmpty
     }
 }
 
@@ -96,6 +103,15 @@ extension ListViewController: UITableViewDelegate, UITableViewDataSource {
         vc.delegate = self
         self.navigationController?.pushViewController(vc, animated: true)
     }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            let task = tasks.remove(at: indexPath.row)
+            CoreDataMethods.shared.deleteTask(task: task)
+            tableView.deleteRows(at: [indexPath], with: .fade)
+            fetchTaskData()
+        }
+    }
 }
 
 extension ListViewController: TaskTableViewCellDelegate {
@@ -104,8 +120,11 @@ extension ListViewController: TaskTableViewCellDelegate {
         
         DispatchQueue.main.async {
             self.tasks[index].status = status
-            CoreDataMethods.shared.addUpdateCurrentTime(task: self.tasks[index])
-            self.fetchTaskData()
+            CoreDataMethods.shared.addUpdateCurrentTime(task: self.tasks[index]) { success in
+                if success {
+                    self.fetchTaskData()
+                }
+            }
         }
     }
 }

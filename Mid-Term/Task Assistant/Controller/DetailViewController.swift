@@ -43,7 +43,7 @@ class DetailViewController: UIViewController {
         self.statusLbl.text = "Status: \(task?.status.rawValue ?? "")"
         
         if let task = task {
-            CoreDataMethods.shared.addUpdateCurrentTime(task: task)
+            CoreDataMethods.shared.addUpdateCurrentTime(task: task) { success in }
         }
     }
     
